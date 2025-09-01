@@ -109,6 +109,7 @@ def main():
     parser.add_argument("--endeca_weight", type=float, default=5.0, help="Multiplier applied to endecasillabo reward (default 5.0)")
     parser.add_argument("--use_repetition_reward", type=int, default=1, help="Whether to include repetition penalty reward (1) or not (0)")
     parser.add_argument("--gen_repetition_penalty", type=float, default=1.2, help="Repetition penalty used in generation/vLLM during GRPO")
+    parser.add_argument("--upload_to_hub", type=int, default=0, help="If 1, upload final artifacts to Hugging Face Hub (default 0: disabled)")
     args = parser.parse_args()
 
     # Validate that batch_size is divisible by num_generations
@@ -327,59 +328,68 @@ def main():
             model.save_pretrained(final_dir)
         except Exception:
             pass
-
-    # Upload model to Hugging Face Hub
-    print("Preparing to upload model to Hugging Face Hub...")
+    # Save tokenizer alongside the final model
     try:
-        from huggingface_hub import HfApi
-        import shutil
+        if hasattr(wrapped_tokenizer, 'save_pretrained'):
+            wrapped_tokenizer.save_pretrained(final_dir)
+    except Exception:
+        pass
+
+    # Optional: upload model to Hugging Face Hub (disabled by default)
+    if int(args.upload_to_hub) == 1:
+        print("Preparing to upload model to Hugging Face Hub...")
+        try:
+            from huggingface_hub import HfApi
+            import shutil
+            
+            # Get HF credentials from environment
+            hf_token = os.environ.get("HF_TOKEN")
+            hf_username = os.environ.get("HF_USERNAME")
+            
+            if not hf_token or not hf_username:
+                print("Warning: HF_TOKEN or HF_USERNAME not found in environment. Skipping upload to Hugging Face Hub.")
+            else:
+                # Use the same run name for the HF repo
+                repo_name = run_name
+                repo_id = f"{hf_username}/{repo_name}"
+                
+                # Create README.md for the model
+                model_readme = create_model_readme(
+                    model_name=args.model_name,
+                    num_epochs=args.num_epochs,
+                    username=hf_username,
+                    run_name=run_name,
+                    repo_id=repo_id
+                )
+                
+                # Write README to output directory
+                with open(os.path.join(args.output_dir, "README.md"), "w", encoding="utf-8") as f:
+                    f.write(model_readme)
+                
+                # Create a new repo on the Hub
+                api = HfApi()
+                print(f"Creating repository: {repo_id}")
+                api.create_repo(
+                    repo_id=repo_id,
+                    token=hf_token,
+                    private=False,
+                    exist_ok=True
+                )
+                
+                # Upload the model
+                print(f"Uploading model to {repo_id}...")
+                api.upload_folder(
+                    folder_path=args.output_dir,
+                    repo_id=repo_id,
+                    token=hf_token
+                )
+                
+                print(f"Model uploaded successfully to: https://huggingface.co/{repo_id}")
         
-        # Get HF credentials from environment
-        hf_token = os.environ.get("HF_TOKEN")
-        hf_username = os.environ.get("HF_USERNAME")
-        
-        if not hf_token or not hf_username:
-            print("Warning: HF_TOKEN or HF_USERNAME not found in environment. Skipping upload to Hugging Face Hub.")
-        else:
-            # Use the same run name for the HF repo
-            repo_name = run_name
-            repo_id = f"{hf_username}/{repo_name}"
-            
-            # Create README.md for the model
-            model_readme = create_model_readme(
-                model_name=args.model_name,
-                num_epochs=args.num_epochs,
-                username=hf_username,
-                run_name=run_name,
-                repo_id=repo_id
-            )
-            
-            # Write README to output directory
-            with open(os.path.join(args.output_dir, "README.md"), "w", encoding="utf-8") as f:
-                f.write(model_readme)
-            
-            # Create a new repo on the Hub
-            api = HfApi()
-            print(f"Creating repository: {repo_id}")
-            api.create_repo(
-                repo_id=repo_id,
-                token=hf_token,
-                private=False,
-                exist_ok=True
-            )
-            
-            # Upload the model
-            print(f"Uploading model to {repo_id}...")
-            api.upload_folder(
-                folder_path=args.output_dir,
-                repo_id=repo_id,
-                token=hf_token
-            )
-            
-            print(f"Model uploaded successfully to: https://huggingface.co/{repo_id}")
-    
-    except Exception as e:
-        print(f"Error uploading model to Hugging Face Hub: {e}")
+        except Exception as e:
+            print(f"Error uploading model to Hugging Face Hub: {e}")
+    else:
+        print("HF upload disabled (set --upload_to_hub 1 to enable). Skipping Hub upload.")
 
     print("Training complete!")
 

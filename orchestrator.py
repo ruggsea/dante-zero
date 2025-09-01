@@ -28,12 +28,16 @@ from utils import generate_run_name
 from config import compute_output_dir
 import glob
 import socket
+from dotenv import load_dotenv
 
 
 VLLM_REPETITION_PENALTY_GRID: List[float] = [1.0, 1.1, 1.2, 1.3]
 KL_BETA_GRID: List[float] = [0.01, 0.02, 0.05, 0.1]
 ENDECA_MODES: List[str] = ["top_prob", "unique_only"]
 
+
+# Load environment variables from .env (for CHECKPOINT_LOCATION, etc.)
+load_dotenv()
 
 @dataclass
 class TrainConfig:
