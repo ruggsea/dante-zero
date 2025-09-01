@@ -1,0 +1,14 @@
+torch>=2.0.0
+transformers>=4.30.0
+trl>=0.7.2
+datasets>=2.13.0
+pandas>=2.0.0
+python-dotenv>=1.0.0
+wandb>=0.15.0
+pyarrow>=11.0.0
+accelerate>=0.21.0
+peft>=0.5.0
+scipy>=1.10.0
+vllm>=0.2.0; sys_platform != "darwin" or platform_machine != "arm64" 
+huggingface_hub>=0.16.0 
+pytest>=7.4.0

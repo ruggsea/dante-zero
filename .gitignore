@@ -1,0 +1,99 @@
+# Environment variables
+.env
+.env.*
+
+# Jupyter Notebooks
+*.ipynb
+.ipynb_checkpoints/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
+venv/
+env/
+ENV/
+.venv/
+.env/
+env.bak/
+venv.bak/
+.python-version
+
+# Distribution / packaging
+.Python
+*.manifest
+*.spec
+
+# Models and data
+models/
+data/
+*.pt
+*.pth
+*.bin
+*.onnx
+*.ckpt
+runs/
+*.model
+dante_models/
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Logs and databases
+*.log
+*.sqlite
+wandb/
+logs/
+tb_logs/
+
+# Hugging Face cache
+.cache/
+.huggingface/
+
+# PyTorch Lightning logs
+lightning_logs/
+
+# Misc
+.coverage
+htmlcov/
+.pytest_cache/
+best_model_reward.json 
+
+wandb/
+
+Dante/
+
+# Outputs and runtime artifacts
+outputs/
+manifests/
+cache/
+tmp*/
+*.cache
+
+# Datasets/artifacts
+*.arrow
+*.parquet
+
